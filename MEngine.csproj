@@ -1,0 +1,58 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+  <PropertyGroup>
+    <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <PropertyGroup>
+    <LangVersion>
+    </LangVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ImplicitUsings>disable</ImplicitUsings>
+  </PropertyGroup>
+  <PropertyGroup>
+    <UseMauiEssentials>false</UseMauiEssentials>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Windows.Extensions" Version="8.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+	<Content Include="audio\**">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="fluid.cs" />
+    <Compile Remove="MENGINE\systems\runtime - backup.cs" />
+    <Compile Remove="template.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include=".game\effects.cs">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Include=".game\enemy.cs">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Include=".game\game.cs">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Include=".game\plr.cs">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Include=".game\shooting.cs">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Include="fluid.cs" />
+    <None Include="MENGINE\systems\runtime - backup.cs" />
+    <None Include="template.cs" />
+  </ItemGroup>
+</Project>

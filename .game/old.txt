@@ -1,0 +1,393 @@
+﻿/*
+using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Security.AccessControl;
+using System.Threading;
+
+namespace MEngine;
+public class Game : Window
+{
+    public static new float Framerate = 1000;
+	public static new bool bShowDebugConsole = true;
+	public static new RenderHandler Renderer = new(typeof(Game));
+	public static new Vector2 Size = new(80,80);
+
+	public static double Speed = 40;
+	public static double CurrentSpeed = 0;
+
+    public static Entity Plr = new(0,0);
+	public static Entity Reticle = new(0, 0);
+    static Entity Ret2;
+	static Entity CursorPoint;
+
+	public static new Vector2 Center = new(0,0);
+	public static Vector2 DesiredWindowSize = new(Size.X, Size.Y);
+
+	public static Sound DashSound = SoundSystem.CreateSound(new SoundData { 
+		FileName = "dash.wav", 
+		IsLooped = false,
+		Volume = 0.6f
+	});
+
+	public static Sound ExplosionSound = SoundSystem.CreateSound(new SoundData
+	{
+        FileName = "explosion.wav",
+        IsLooped = false,
+        Volume = 0.6f
+    });
+
+	//												DASH
+    public static bool IsDashOnCooldown = false;
+    public static double dashDistance = 10;
+    public static int dashCooldown = 1000;
+
+    public static Vector2 cursorPos = new();
+
+    private static bool vtoggle = false;
+    private static bool vdown = false;
+
+    public static void Init()
+	{
+		_debug.WindowTick();
+        //ConsoleUtil.SetConsolePosition(Center, bCenter: true);
+
+        Plr.Name = "Player";
+        Plr.Shape = new Shape2(Shapes2D.Triangle);
+		Plr.Size = new Vector2(3,3);
+		Plr.Symbol = "#";
+		Plr.HasPhysics = true;
+		Plr.HasGravity = false;
+		Plr.HasFriction = false;
+
+		Plr.Shape.Triangles[0].A += new Vector2(0, 0.5);
+        Plr.Shape.Triangles[0].B += new Vector2(0, 0.5);
+        Plr.Shape.Triangles[0].C += new Vector2(0, 0.5);
+
+        Plr.Shape.AddTriangle(
+			new VertexGroup(
+				new Vector2(-1,-0.5),
+				new Vector2(0,-0.5),
+				new Vector2(-1,-1.5)
+				)
+			);
+        Plr.Shape.AddTriangle(
+            new VertexGroup(
+                new Vector2(1, -0.5),
+                new Vector2(0, -0.5),
+                new Vector2(1, -1.5)
+                )
+            );
+
+        Reticle.Shape = new Shape2(Shapes2D.Triangle);
+		Reticle.Size = new Vector2(1, 2);
+		Reticle.Symbol = ">";
+        Reticle.HasPhysics = true;
+        Reticle.HasGravity = false;
+        Reticle.HasFriction = false;
+		Reticle.Name = "Ship1";
+
+
+		Ret2 = new Entity();
+        Ret2.Shape = new Shape2(Shapes2D.Triangle);
+        Ret2.Size = new Vector2(1, 2);
+        Ret2.Symbol = "<";
+        Ret2.HasPhysics = true;
+        Ret2.HasGravity = false;
+        Ret2.HasFriction = false;
+		Ret2.Name = "Ship2";
+
+        //Ret2.Size = 3;
+
+
+        /* TODO
+		 * ------------------------------------------ GAME
+		 * Clean up program.cs code first
+		 * Create enemies
+		 * Create shooting and bullets
+		 * Create ai
+		 * 
+		 * -- later
+		 * fix entity.copy()
+		 */
+
+/*CursorPoint = Reticle.Copy();
+CursorPoint.Size = new Vector2(1, 1);
+CursorPoint.Shape = new Shape2(Shapes2D.Square);
+CursorPoint.Symbol = "+";
+CursorPoint.Name = "CursorPoint";*/
+
+using MEngine;
+using System.Drawing;
+using System.Threading;
+
+box.Position = new Vector2(10, 0);
+box.Size = new Vector2(2, 2);
+box.LookDir = new Vector2(0, 0);
+box.HasPhysics = false;
+box.ClickListenerEnabled = true;
+box.Shape = new Shape2(Shapes2D.Square);
+box.Name = "ExplodeButton";
+
+box.ClickedEvent += onBoxClick;
+
+e.Symbol = "*";
+e.Parent = Plr;
+e.Size = 1;
+e.Velocity = new Vector2(1);
+e.MaxParticleLifetimeRange = 300;
+e.Spread = 40;
+
+e.EmitRate = 35;
+e.EmitDirection = Vector2.FromDegrees(180);
+e.MaxLifetimeMilliseconds = 1337000000;
+e.MaxParticleLifetimeMilliseconds = 300;
+e.Drag = 0.98;
+
+    }
+    public static ParticleEmitter e = new();
+
+public class CDEntity : Entity
+{
+    public bool Cooldown = false;
+}
+
+public static CDEntity box = new();
+public static void onBoxClick(object sender, ClickedEventArgs args)
+{
+    /*if (box.Cooldown)
+        return;
+
+    vtoggle = !vtoggle;
+
+
+    Thread t = new(() => { 
+        box.Cooldown = true;
+        Thread.Sleep(500);
+        if (box.Exists)
+        {
+            box.Cooldown = false;
+        }
+    });
+    t.Start();*/
+
+    if (box.Cooldown)
+        return;
+
+    ConsoleUtil.SetConsolePosition(new Vector2(), bCenter: true);
+
+    ParticleEmitter p = new();
+    p.Position = Plr.Position;
+    p.Size = 1;
+    p.Velocity = new Vector2(3);
+    p.MaxParticleLifetimeRange = 500;
+    p.Spread = 360;
+
+    p.EmitRate = 70;
+    p.EmitDirection = Vector2.FromDegrees(0);
+    p.MaxLifetimeMilliseconds = 0;
+    p.MaxParticleLifetimeMilliseconds = 250;
+    p.VelocityRange = 2;
+    p.Drag = 0.9;
+
+    p.Emit(100);
+    ExplosionSound.Play();
+
+    Thread t = new(() => {
+        box.Cooldown = true;
+        Thread.Sleep(200);
+        if (box.Exists)
+        {
+            box.Cooldown = false;
+        }
+    });
+    t.Start();
+}
+
+public static void Tick()
+{
+    _debug.WindowTick();
+    Entity[] touchingEntities = Plr.GetTouchingEntities([Plr, Reticle, Ret2]);
+    _debug.Variable = (touchingEntities != null) ? touchingEntities[0] : null;
+
+    if (Controls.IsKeyDown("Escape"))
+        ExitWindow();
+
+    if (Controls.IsKeyDown("P"))
+        DesiredWindowSize += 1;
+    if (Controls.IsKeyDown("O"))
+        DesiredWindowSize -= 1;
+
+    if (Controls.IsKeyDown("V") && !vdown)
+    {
+        vdown = true;
+        vtoggle = !vtoggle;
+    }
+    else if (!Controls.IsKeyDown("V")) { vdown = false; }
+
+    Vector2 cursorDir = Plr.Position.ToPixels().LookAt(Controls.GetCursorPosition(bCenter: true));
+
+    if (vtoggle)
+        //ConsoleUtil.SetConsolePosition(Plr.Position.ToPixels(), true);
+        //ConsoleUtil.MoveTo(Controls.GetCursorPosition(bCenter: true));
+        ConsoleUtil.MoveTo(
+            Util.Lerp(
+                ConsoleUtil.GetConsolePosition(true),
+                Plr.Position.ToPixels() + new Vector2(cursorDir.X * 50, cursorDir.Y * 50)
+            , 0.1
+            )
+            );
+
+
+    Vector2 oldVel = Plr.Velocity.Normalize();
+
+    if (Controls.IsKeyDown("D") || Controls.IsKeyDown("A")
+        || Controls.IsKeyDown("S") || Controls.IsKeyDown("W"))
+        Plr.Velocity = new Vector2(0, 0);
+
+    if (Controls.IsKeyDown("D"))
+    {
+        CurrentSpeed = Speed;
+        Plr.Velocity = new Vector2(1, Plr.Velocity.Y);
+    }
+    if (Controls.IsKeyDown("A"))
+    {
+        CurrentSpeed = Speed;
+        Plr.Velocity = new Vector2(-1, Plr.Velocity.Y);
+    }
+    if (Controls.IsKeyDown("S"))
+    {
+        CurrentSpeed = Speed;
+        Plr.Velocity = new Vector2(Plr.Velocity.X, -1);
+    }
+    if (Controls.IsKeyDown("W"))
+    {
+        CurrentSpeed = Speed;
+        Plr.Velocity = new Vector2(Plr.Velocity.X, 1);
+    }
+
+    Plr.Velocity = Util.Lerp(oldVel, Plr.Velocity.Normalize(), 0.5);
+    Plr.Velocity *= CurrentSpeed;
+    CurrentSpeed *= 1 - 5 * Runtime.dTime;
+
+    if (Controls.IsKeyDown("Spacebar") && !IsDashOnCooldown)
+    {
+        Dash(dashDistance);
+
+        Entity ee = new();
+        ee.Name = "CreatedBox";
+        ee.Position = Plr.Position;
+        ee.Shape = new Shape2(Shapes2D.Square);
+        ee.Size = new Vector2(10);
+    }
+
+    Plr.LookDir = Util.Lerp(Plr.LookDir,
+        new Vector2(cursorDir.X, cursorDir.Y)
+        //Plr.Velocity.Normalize()
+        , 0.3);
+
+    //double normalizedCursorX = Controls.GetCursorPosition().X / 1920d;
+    //double normalizedCursorY = Controls.GetCursorPosition().Y / 1080d;
+
+    //CursorPoint.Position = Util.Lerp(
+    //	CursorPoint.Position,
+    //	Size * new Vector2((normalizedCursorX-0.5)*0.61, (-normalizedCursorY+0.5)*1.19),
+    //	0.5
+    //	);
+
+    //Plr.LookDir = Util.Lerp(Plr.LookDir, 
+    //	new Vector2(Plr.Position.X / Size.X, Plr.Position.Y / Size.Y)
+    //    , 0.8);
+
+    Reticle.LookDir = Util.Lerp(Reticle.LookDir, Plr.LookDir, 0.4);
+    Ret2.LookDir = Util.Lerp(Reticle.LookDir, Plr.LookDir, 0.4);
+
+    Reticle.Position = Util.Lerp(Reticle.Position, Plr.Position + new Vector2(7, -6, Plr), 0.1);
+    Ret2.Position = Util.Lerp(Ret2.Position, Plr.Position + new Vector2(-7, -6, Plr), 0.1);
+
+    Size = Util.Lerp(Size, DesiredWindowSize, 0.2);
+    box.Position = new Vector2(ConsoleUtil.X - ConsoleUtil.Width * 0.4, ConsoleUtil.Y + ConsoleUtil.Height * 0.35).FromPixels();
+    //box.Position = Controls.GetCursorPosition(true).FromPixels();
+}
+
+public static void PostRenderTick()
+{
+    //if (vtoggle)
+    //ConsoleUtil.SetConsolePosition(cursorPos);
+}
+
+public static void Dash(double distance)
+{
+    IsDashOnCooldown = true;
+    Thread t = new(() =>
+    {
+        Thread.Sleep(dashCooldown);
+        IsDashOnCooldown = false;
+    });
+    t.Start();
+
+    DashSound.Play();
+
+    Vector2 normalizedVel = Plr.Velocity.Normalize();
+
+    Entity trail = new();
+    trail.Name = "Trail";
+    trail.Shape = new Shape2(Shapes2D.Triangle);
+    trail.HasPhysics = false;
+    trail.Size = Plr.Size * new Vector2(2, distance / 2 - 1);
+
+
+    //if (normalizedVel == 0)
+    //{
+    ParticleEmitter p = new();
+    p.Parent = Plr;
+    p.Size = 1;
+    p.MaxParticleLifetimeRange = 300;
+
+
+    p.EmitDirection = Vector2.FromDegrees(180);
+    p.MaxLifetimeMilliseconds = 0;
+    p.VelocityRange = 0.5;
+    p.Drag = 0.99;
+    p.Symbol = "#";
+
+
+    p.Spread = 10;
+    p.Velocity = new Vector2(3);
+    p.MaxParticleLifetimeMilliseconds = 150;
+    p.Emit(10);
+
+
+    Plr.Position = Plr.Position + Plr.LookDir * distance;
+    trail.Position = Plr.Position + Plr.LookDir * ((-distance / 2) - 9);
+    trail.LookDir = Plr.LookDir;
+    /*}
+    else
+    {
+        Plr.Position = Plr.Position + normalizedVel * distance;
+        trail.Position = Plr.Position + Plr.LookDir * ((-distance / 2) - 2);
+        trail.LookDir = normalizedVel;
+    }*/
+    p.MaxParticleLifetimeMilliseconds = 250;
+
+    p.Velocity = new Vector2(1);
+    p.Spread = 55;
+    p.Emit(20);
+
+    Thread decay = new(() =>
+    {
+        while (trail.Exists)
+        {
+            trail.Size *= new Vector2(0.7, 1);
+
+            if (trail.Size.X < 0.1)
+                trail.Dispose();
+
+            Thread.Sleep((int)(1d / Runtime.currentFPS * 1000d));
+        }
+    });
+    decay.Start();
+}
+
+}
+*/
